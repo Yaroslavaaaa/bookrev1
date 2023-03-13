@@ -4,9 +4,9 @@
 {% block content %}
 
 <div>
-   <form action="{% url 'add' %}" method="post">
+   <form action="{% url 'add' %}" method="post" enctype="multipart/form-data">
       {% csrf_token %}
-<!--      {{ form.as_p }}-->
+      <div>{{ form.non_field_errors }}</div>
       {% for f in form %}
       <p>
          <label for="{{ f.id_for_label }}">{{ f.label }}:</label>

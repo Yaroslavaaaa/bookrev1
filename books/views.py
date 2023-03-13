@@ -1,42 +1,75 @@
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse, HttpResponseNotFound, Http404
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import RequestContext
+from django.urls import reverse_lazy
+from django.views.generic import ListView, DetailView, CreateView
 
 from .forms import *
 # Create your views here.
 from .models import *
 
 
-def index(request):
-    # return HttpResponse("Страница книг")
-    books = Books.objects.all()
-    genres = Genres.objects.all()
-    return render(request, "books/index.html", {'books': books, 'genres': genres, 'title': 'Главная страница'})
-def book(request, book_slug):
 
-    book = get_object_or_404(Books, slug=book_slug)
 
-    context = {
-        'book': book,
-        'title': book.title
-    }
 
-    return render(request, "books/book.html", context=context)
-    # return HttpResponse(f"Страница книг, {bid}")
+class BookHome(ListView):
+    model = Books
+    template_name = 'books/index.html'
+    context_object_name = 'books'
+    # extra_context =
 
-def add(request):
-    if request.method == 'POST':
-        form = AddBookForm(request.POST)
-        if form.is_valid():
-            # print(form.cleaned_data)
-            try:
-                Books.objects.create(**form.cleaned_data)
-                return redirect('index')
-            except:
-                form.add_error(None, 'Error')
-    else:
-        form = AddBookForm()
-    return render(request, "books/add.html", {'form': form})
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Главная страница"
+        context['genres'] = Genres.objects.all()
+        context['genre_selected'] = 0
+        return context
+
+
+class BookGenre(ListView):
+    model = Books
+    template_name = 'books/index.html'
+    context_object_name = 'books'
+    allow_empty = False
+
+
+    def get_queryset(self):
+        return Books.objects.filter(genre__slug=self.kwargs['genre_slug'])
+
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Категория - " + str(context['books'][0].genre)
+        context['genres'] = Genres.objects.all()
+        context['genre_selected'] = context['books'][0].genre_id
+        return context
+
+
+
+
+class ShowBook(DetailView):
+    model = Books
+    template_name = 'books/book.html'
+    slug_url_kwarg = 'book_slug'
+    context_object_name = 'book'
+
+
+
+
+
+class AddBook(CreateView):
+    form_class = AddBookForm
+    template_name = 'books/add.html'
+    success_url = reverse_lazy('index')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "Добавление книги"
+        return context
+
+
+
+
 
 def error404(request, exeption):
     return HttpResponseNotFound(f"<h1>Страница не найдена</h1>")

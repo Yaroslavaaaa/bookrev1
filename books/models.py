@@ -5,13 +5,13 @@ from django.urls import reverse
 # Create your models here.
 
 class Books(models.Model):
-    title = models.CharField(max_length=255, db_index=True)
-    author = models.CharField(max_length=255)
-    genre = models.ForeignKey("Genres", on_delete=models.PROTECT)
-    description = models.TextField()
-    pub_date = models.IntegerField()
-    image = models.ImageField(upload_to="photos/bookphoto/%Y/%m/%d/")
-    slug = models.SlugField(max_length=255, unique=True, db_index=True)
+    title = models.CharField(max_length=255, db_index=True, verbose_name="Название")
+    author = models.CharField(max_length=255, verbose_name="Автор")
+    genre = models.ForeignKey("Genres", on_delete=models.PROTECT, verbose_name="Жанр")
+    description = models.TextField(verbose_name="Описание")
+    pub_date = models.IntegerField(verbose_name="Год выпуска")
+    image = models.ImageField(upload_to="photos/bookphoto/%Y/%m/%d/", verbose_name="Изображение")
+    slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
 
     def __str__(self):
         return self.title
@@ -35,7 +35,7 @@ class Genres(models.Model):
 
 
     def get_absolute_url(self):
-        return reverse('genre', kwargs={'genre_id': self.pk})
+        return reverse('genre', kwargs={'genre_slug': self.slug})
 
 
     class Meta:

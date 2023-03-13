@@ -1,11 +1,26 @@
 from django import forms
+from django.core.exceptions import ValidationError
+
 from .models import *
 
 
-class AddBookForm(forms.Form):
-    title = forms.CharField(max_length=255, label="Название")
-    author = forms.CharField(max_length=255, label="Автор")
-    slug = forms.SlugField(max_length=255, label="URL")
-    description = forms.CharField(widget=forms.Textarea(attrs={'cols': 60, 'rows': 10}), label="Описание")
-    genre = forms.ModelChoiceField(queryset=Genres.objects.all(), label="Жанр", empty_label="Жанр не выбран")
-    pub_date = forms.IntegerField(max_value=9999, label="Дата публикации")
+class AddBookForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['genre'].empty_label = "Жанр не выбран"
+    class Meta:
+        model = Books
+        fields = ['title', 'author', 'genre', 'description', 'pub_date', 'slug', 'image']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form_input'}),
+            'description': forms.Textarea(attrs={'cols': 60, 'rows': 10})
+        }
+
+
+    def clean_title(self):
+        title = self.cleaned_data['title']
+        if len(title) > 200:
+            raise ValidationError('Длина превышает 200 символов')
+
+        return title
