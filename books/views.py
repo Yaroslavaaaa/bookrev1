@@ -3,30 +3,30 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template import RequestContext
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 from .forms import *
 # Create your views here.
 from .models import *
+from .utils import *
 
 
 
 
 
-class BookHome(ListView):
+class BookHome(DataMixin, ListView):
     model = Books
     template_name = 'books/index.html'
     context_object_name = 'books'
-    # extra_context =
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = "Главная страница"
-        context['genres'] = Genres.objects.all()
-        context['genre_selected'] = 0
-        return context
+        g_def = self.get_user_context(title="Главная страница")
+        return dict(list(context.items()) + list(g_def.items()))
 
 
-class BookGenre(ListView):
+class BookGenre(DataMixin, ListView):
     model = Books
     template_name = 'books/index.html'
     context_object_name = 'books'
@@ -39,33 +39,36 @@ class BookGenre(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = "Категория - " + str(context['books'][0].genre)
-        context['genres'] = Genres.objects.all()
-        context['genre_selected'] = context['books'][0].genre_id
-        return context
+        g_def = self.get_user_context(title="Категория - " + str(context['books'][0].genre),
+                                      genre_selected=context['books'][0].genre_id)
+        return dict(list(context.items()) + list(g_def.items()))
 
 
 
 
-class ShowBook(DetailView):
+class ShowBook(DataMixin, DetailView):
     model = Books
     template_name = 'books/book.html'
     slug_url_kwarg = 'book_slug'
     context_object_name = 'book'
 
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        g_def = self.get_user_context(title=context['book'])
+        return dict(list(context.items()) + list(g_def.items()))
 
 
-
-
-class AddBook(CreateView):
+class AddBook(LoginRequiredMixin, DataMixin, CreateView):
     form_class = AddBookForm
     template_name = 'books/add.html'
     success_url = reverse_lazy('index')
+    login_url = reverse_lazy('index')
+    raise_exception = True
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = "Добавление книги"
-        return context
+        g_def = self.get_user_context(title="Добавление книги")
+        return dict(list(context.items()) + list(g_def.items()))
 
 
 

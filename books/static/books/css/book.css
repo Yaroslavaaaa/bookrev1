@@ -18,3 +18,16 @@
 .bold-text{
     font-weight: bold;
 }
+
+.comment{
+    width: 66%;
+    color: rgba(183, 92,  41, 27%);
+    font-size: 40px;
+}
+
+
+.input-comment{
+
+}
+
+
