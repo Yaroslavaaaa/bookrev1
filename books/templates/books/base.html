@@ -19,18 +19,24 @@
 
 
         {% for m in menu %}
-	{% if not forloop.last %}
 			<div class="nav-el"><a class="nav-link" href="{% url m.url_name %}">{{m.title}}</a></div>
-	{% else %}
-			<div class="nav-el"><a class="nav-link" href="{% url m.url_name %}">{{m.title}}</a></div>
-	{% endif %}
+
 {% endfor %}
+        {% if request.user.is_authenticated %}
+        <div class="login-logout"><a class="nav-link" href="#">{{user.username}}</a></div>
+        <div class="login-logout"><a class="nav-link" href="{% url 'logout' %}">Выйти</a></div>
+        {% else %}
+        <div class="login-logout"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></div>
+        <div class="login-logout"><a class="nav-link" href="{% url 'login' %}">Войти</a></div>
+        {% endif %}
+<!--        <div class="nav-el"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></div>-->
+<!--        <div class="nav-el"><a class="nav-link" href="{% url 'login' %}">Войти</a></div>-->
     </div>
-    <div class="user">
-        <div>
-            User User
-        </div>
-    </div>
+<!--    <div class="user">-->
+<!--        <div>-->
+<!--            User User-->
+<!--        </div>-->
+<!--    </div>-->
 </div>
 <div class="genres">
     <div class="list-genres">

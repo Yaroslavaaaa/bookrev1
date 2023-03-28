@@ -7,4 +7,7 @@ urlpatterns = [
     path('book/<slug:book_slug>/', ShowBook.as_view(), name="show_book"),
     path('genre/<slug:genre_slug>/', BookGenre.as_view(), name='genre'),
     path('add/', AddBook.as_view(), name="add"),
+    path('login/', Login.as_view(), name="login"),
+    path('logout/', logout_user, name='logout'),
+    path('register/', Register.as_view(), name="register"),
 ]
