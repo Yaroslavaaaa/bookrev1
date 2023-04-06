@@ -4,12 +4,13 @@
 
     <div class="content">
         <div class="search">
-            <input type="text" name="" class="search-input">
-            <button class="input-text">
-                ПОИСК
-            </button>
+                <form action="{% url 'search_results' %}" method="get">
+                    <input type="text" name="q" class="search-input" placeholder="Название книги">
+                    <button type="submit" class="input-text">
+                        ПОИСК
+                    </button>
+                </form>
         </div>
-    <h1>test</h1>
         <div class="books">
             <div class="cards">
                 {% for b in books %}

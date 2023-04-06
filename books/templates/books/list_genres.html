@@ -2,6 +2,6 @@
   {% if g.pk == genre_selected %}
     <div class="genre-name">{{g.genre_name}}</div>
   {% else %}
-    <div class="genre-name"><a href="{{g.get_absolute_url}}">{{g.genre_name}}</a></div>
+    <div class="genre-name selected"><a class="genre-link" href="{{g.get_absolute_url}}">{{g.genre_name}}</a></div>
   {% endif %}
 {% endfor %}

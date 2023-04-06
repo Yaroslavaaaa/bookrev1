@@ -8,42 +8,39 @@
     <link type="text/css" href="{% static 'books/css/style.css' %}" rel="stylesheet" />
     <link type="text/css" href="{% static 'books/css/book.css' %}" rel="stylesheet" />
     <link type="text/css" href="{% static 'books/css/index.css' %}" rel="stylesheet" />
+    <link type="text/css" href="{% static 'books/css/forms.css' %}" rel="stylesheet" />
 </head>
 <body>
 <div class="navbar">
     <div class="nav-elements">
-        <div class="nav-el logo">.</div>
-        <div class="nav-el logo-text">Bookrev</div>
-<!--        <div class="nav-el"><a class="nav-link" href="{% url 'index' %}">Главная</a></div>-->
-<!--        <div class="nav-el"><a class="nav-link" href="add">Добавить книгу</a></div>-->
+        <div class="nav-el logo">BR</div>
+        <div class="logo-text">Bookrev</div>
 
 
-        {% for m in menu %}
+        <div class="menu">
+            {% for m in menu %}
 			<div class="nav-el"><a class="nav-link" href="{% url m.url_name %}">{{m.title}}</a></div>
 
-{% endfor %}
-        {% if request.user.is_authenticated %}
-        <div class="login-logout"><a class="nav-link" href="#">{{user.username}}</a></div>
-        <div class="login-logout"><a class="nav-link" href="{% url 'logout' %}">Выйти</a></div>
-        {% else %}
-        <div class="login-logout"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></div>
-        <div class="login-logout"><a class="nav-link" href="{% url 'login' %}">Войти</a></div>
-        {% endif %}
-<!--        <div class="nav-el"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></div>-->
-<!--        <div class="nav-el"><a class="nav-link" href="{% url 'login' %}">Войти</a></div>-->
+    {% endfor %}
+            {% if request.user.is_authenticated %}
+            <div class="login-logout"><a class="nav-link" href="#">{{user.username}}</a></div>
+            <div class="login-logout"><a class="nav-link" href="{% url 'logout' %}">Выйти</a></div>
+            {% else %}
+            <div class="login-logout"><a class="nav-link" href="{% url 'register' %}">Регистрация</a></div>
+            <div class="login-logout"><a class="nav-link" href="{% url 'login' %}">Войти</a></div>
+            {% endif %}
+        </div>
     </div>
-<!--    <div class="user">-->
-<!--        <div>-->
-<!--            User User-->
-<!--        </div>-->
-<!--    </div>-->
 </div>
+
+
+{% load cache %}
 <div class="genres">
     <div class="list-genres">
         {% if genre_selected == 0 %}
-            <div class="genre-name selected" >Все жанры</div>
+            <div class="genre-name selected" >все жанры</div>
         {% else %}
-            <div class="genre-name selected" ><a href="{% url 'index' %}">Все жанры</a></div>
+            <div class="genre-name selected" ><a href="{% url 'index' %}">все жанры</a></div>
         {% endif %}
 
         {% for g in genres %}

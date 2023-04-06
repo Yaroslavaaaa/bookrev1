@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.auth.models import User
 
 
 # Create your models here.
@@ -12,6 +13,7 @@ class Books(models.Model):
     pub_date = models.IntegerField(verbose_name="Год выпуска")
     image = models.ImageField(upload_to="photos/bookphoto/%Y/%m/%d/", verbose_name="Изображение")
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
+    is_published = models.BooleanField(default=True, verbose_name="Публикация")
 
     def __str__(self):
         return self.title
@@ -57,7 +59,18 @@ class Roles(models.Model):
 class Comments(models.Model):
     com_text = models.TextField(db_index=True)
     book = models.ForeignKey("Books", on_delete=models.PROTECT)
-    user = models.ForeignKey("Users", on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     create_time = models.DateTimeField(auto_now_add=True)
-    parent_comment = models.ForeignKey("Comments", on_delete=models.PROTECT)
-    slug = models.SlugField(max_length=255, unique=True, db_index=True)
+    # parent_comment = models.ForeignKey("Comments", on_delete=models.PROTECT, blank=True)
+    # slug = models.SlugField(max_length=255, unique=True, db_index=True)
+
+    def __str__(self):
+        return self.com_text
+
+    # def get_absolute_url(self):
+    #     return reverse('comment', kwargs={'book_slug': self.slug})
+
+    class Meta:
+        verbose_name = 'Комментарии'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['create_time', 'com_text']

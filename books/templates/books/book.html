@@ -26,14 +26,33 @@
             </div>
         </div>
     </div>
-    <div>
+    <div class="com">
+
         <div class="comment">Комментарии</div>
-        <form>
+        <div class="comments">
+        <form method="post">
             <div>
-                <textarea class="input-comment"></textarea>
+                <textarea class="input-comment" placeholder="Введите текст комментария"></textarea>
             </div>
-            <button type="submit">Отправить</button>
+
+            {% csrf_token %}
+            {% for f in form %}
+              <p>{{ f }}</p>
+              <div class="form-error">{{ f.errors }}</div>
+              {% endfor %}
+            {% if request.user.is_authenticated %}
+            <div class="button-c">
+                <button class="submit-comment" type="submit">Отправить</button>
+            </div>
+            {% else %}
+            <div>Авторизируйтесь, что бы оставить комментарий</div>
+            {% endif %}
         </form>
+
+            {% for c in comments %}
+                <div>{{c}}</div>
+            {% endfor %}
+
     </div>
 </div>
 
