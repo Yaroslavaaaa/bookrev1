@@ -57,20 +57,35 @@ body{
     margin-right: 10px;
 }
 
-/*.user{*/
-/*    display: flex;*/
-/*    justify-content: end;*/
-/*    align-items: center;*/
-/*    margin-left: 30%;*/
-/*    margin-right: 17%;*/
-/*    color: white;*/
-/*    font-size: 24px;*/
-/*}*/
+.user-log{
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    /*margin-left: 60vw;*/
+    /*margin-right: 17%;*/
+    color: white;
+}
 
 
 .genre-name{
     margin-left: 30px;
     margin-top: 30px;
+    color: #820000;
+    font-size: 20px;
+}
+
+a{
+    color: #820000;
+    text-decoration: none;
+}
+
+a:hover{
+    color: black;
+}
+
+
+.selected{
+    color: black;
 }
 
 
@@ -126,20 +141,3 @@ body{
     width: 300px;
     font-size: 16px;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

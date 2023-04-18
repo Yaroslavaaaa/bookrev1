@@ -14,6 +14,9 @@ urlpatterns = [
     path('logout/', logout_user, name='logout'),
     path('register/', Register.as_view(), name="register"),
     path('search/', SearchResultsView.as_view(), name='search_results'),
+    path('<int:pk>/comment/', CommentCreateView.as_view(), name='create_comment'),
+    path('user/<str:user_username>/', UserProfile.as_view(), name="profile"),
+    path('user/<str:user_username>/editprofile', EditUserProfile.as_view(), name="edit_profile"),
 ]
 
 

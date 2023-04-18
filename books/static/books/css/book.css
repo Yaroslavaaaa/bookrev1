@@ -78,4 +78,19 @@
 }
 
 
+.avatar-com{
+    width: 5vw;
+    border-radius: 100%;
+}
+
+
+.one-comment{
+    display: flex;
+}
+
+.user-and-text{
+    margin-left: 1vw;
+}
+
+
 

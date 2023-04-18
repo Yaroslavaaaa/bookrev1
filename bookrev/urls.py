@@ -19,13 +19,41 @@ from django.urls import path, include
 import debug_toolbar
 
 from bookrev import settings
+from rest_framework import routers
 from books.views import *
+
+
+
+
+# class MyCustomRouter(routers.SimpleRouter):
+#     routes = [
+#         routers.Route(url=r'^{prefix}$',
+#                       mapping={'get': 'list'},
+#                       name='{basename}-list',
+#                       detail=False,
+#                       initkwargs={'suffix': 'List'}),
+#         routers.Route(url=r'^{prefix}/{lookup}$',
+#                       mapping={'get': 'retrieve'},
+#                       name='{basename}-detail',
+#                       detail=True,
+#                       initkwargs={'suffix': 'Detail'})
+#     ]
+#
+#
+# router = MyCustomRouter()
+# router.register(r'book', BookViewSet, basename='books')
+# print(router.urls)
+
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('captcha/', include('captcha.urls')),
     path('', include('books.urls')),
+    path('api/v1/book/', BookAPIList.as_view()),
+    path('api/v1/book/<int:pk>/', BookAPIUpdate.as_view()),
+    path('api/v1/bookdelete/<int:pk>/', BookAPIDestroy.as_view())
+    # path('api/v1/', include(router.urls))
 ]
 
 if settings.DEBUG:

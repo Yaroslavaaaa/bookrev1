@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
+
+from bookrev import settings
 
 
 # Create your models here.
@@ -14,6 +16,7 @@ class Books(models.Model):
     image = models.ImageField(upload_to="photos/bookphoto/%Y/%m/%d/", verbose_name="Изображение")
     slug = models.SlugField(max_length=255, unique=True, db_index=True, verbose_name="URL")
     is_published = models.BooleanField(default=True, verbose_name="Публикация")
+    user = models.ForeignKey("CustomUser", verbose_name='Пользователь', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -45,21 +48,40 @@ class Genres(models.Model):
         verbose_name_plural = 'Жанры'
         ordering = ['id']
 
-class Users(models.Model):
-    name = models.CharField(max_length=50, db_index=True)
-    surname = models.CharField(max_length=50)
-    nickname = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
-    avatar = models.ImageField(upload_to="photos/avatars/%Y/%m/%d/")
-    role = models.ForeignKey("Roles", on_delete=models.PROTECT)
+
+class CustomUser(AbstractUser):
+    # Добавляем новые поля в модель пользователя
+    age = models.PositiveIntegerField(null=True, blank=True)
+    avatar = models.ImageField(upload_to='photos/avatars/%Y/%m/%d/', default='photos/avatars/no_avatar.jpg')
+    role = models.ForeignKey("Roles", on_delete=models.PROTECT, default=1)
+
+
+    def __str__(self):
+        return self.username
+
+
+    def get_absolute_url(self):
+        return reverse('user', kwargs={'user_username': self.username})
+
+
 
 class Roles(models.Model):
     role_name = models.CharField(max_length=30, db_index=True)
 
+    def __str__(self):
+        return self.role_name
+
+
+
+    class Meta:
+        verbose_name = 'Роли'
+        verbose_name_plural = 'Роли'
+        ordering = ['role_name']
+
 class Comments(models.Model):
     com_text = models.TextField(db_index=True)
-    book = models.ForeignKey("Books", on_delete=models.PROTECT)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    book = models.ForeignKey("Books", on_delete=models.PROTECT, related_name="comments")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     create_time = models.DateTimeField(auto_now_add=True)
     # parent_comment = models.ForeignKey("Comments", on_delete=models.PROTECT, blank=True)
     # slug = models.SlugField(max_length=255, unique=True, db_index=True)
@@ -67,8 +89,8 @@ class Comments(models.Model):
     def __str__(self):
         return self.com_text
 
-    # def get_absolute_url(self):
-    #     return reverse('comment', kwargs={'book_slug': self.slug})
+    def get_absolute_url(self):
+        return reverse('book_detail', kwargs={'pk': self.book.pk})
 
     class Meta:
         verbose_name = 'Комментарии'

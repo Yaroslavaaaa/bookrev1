@@ -1,17 +1,25 @@
 from urllib import request
 
 from django.contrib.auth import logout, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db.models import Q
-from django.http import HttpResponse, HttpResponseNotFound, Http404
-from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponseNotFound, Http404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, FormView
-
+from django.views.generic import ListView, DetailView, CreateView
+from rest_framework import generics, viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet
 
 from .forms import *
 # Create your views here.
 from .models import *
+from .permissions import *
+from .serializers import BooksSerializer
 from .utils import *
 
 
@@ -31,8 +39,6 @@ class BookHome(DataMixin, ListView):
     def get_queryset(self):
         return Books.objects.filter(is_published=True).select_related('genre')
 
-    # def get_queryset(self):
-    #     return Books.objects.filter.select_related('genre')
 
 
 class BookGenre(DataMixin, ListView):
@@ -48,12 +54,9 @@ class BookGenre(DataMixin, ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        # g = Books.objects.get(slug=self.kwargs['genre_slug'])
         g = get_object_or_404(Genres, slug=self.kwargs['genre_slug'])
         g_def = self.get_user_context(title='Категория - ' + str(g.genre_name),
                                       genre_selected=g.pk)
-        # g_def = self.get_user_context(title="Категория - " + str(context['books'][0].genre),
-        #                               genre_selected=context['books'][0].genre_id)
         return dict(list(context.items()) + list(g_def.items()))
 
 
@@ -61,7 +64,6 @@ class BookGenre(DataMixin, ListView):
 
 class ShowBook(DataMixin, DetailView):
     model = Books
-    form_class = CommentForm
     template_name = 'books/book.html'
     slug_url_kwarg = 'book_slug'
     context_object_name = 'book'
@@ -69,19 +71,36 @@ class ShowBook(DataMixin, DetailView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['comments'] = Comments.objects.all()
+        book = self.get_object()
+        comments = book.comments.filter()
+        context['comments'] = comments
         g_def = self.get_user_context(title=context['book'])
-        # user = self.request.user
+        context['form'] = CommentForm()
+
         return dict(list(context.items()) + list(g_def.items()))
 
+
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comments
+    form_class = CommentForm
+    template_name = 'comment_form.html'
+    # success_url = reverse_lazy('index')
+
     def form_valid(self, form):
-        form.user = self.request.user.id
-        form.book = get_object_or_404(Books, slug=self.kwargs['book_slug'])
+        book = get_object_or_404(Books, pk=self.kwargs['pk'])
+        form.instance.user = self.request.user
+        form.instance.book = book
+        response = super().form_valid(form)
+        return response
+
+    def get_success_url(self):
+        book_slug = self.object.book.slug
+        success_url = reverse('show_book', kwargs={'book_slug': book_slug})
+        return success_url
 
 
-        comment = form.save()
-        # login(self.request, comment)
-        # return redirect('index')
+
 
 
 class AddBook(DataMixin, CreateView):
@@ -91,16 +110,21 @@ class AddBook(DataMixin, CreateView):
     login_url = reverse_lazy('index')
     raise_exception = True
 
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        response = super().form_valid(form)
+        return response
+
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         g_def = self.get_user_context(title="Добавление книги")
         return dict(list(context.items()) + list(g_def.items()))
 
 class Register(DataMixin, CreateView):
-    form_class = RegisterUserForm
+    form_class = RegisterForm
     template_name = 'books/register.html'
     success_url = reverse_lazy('login')
-    # raise_exception = True
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -143,28 +167,117 @@ class SearchResultsView(DataMixin, ListView):
         g_def = self.get_user_context(title="Главная страница")
         return dict(list(context.items()) + list(g_def.items()))
 
-class AddComment(DataMixin, CreateView):
-    # form_class = CommentForm
-    template_name = 'books/book.html'
-    success_url = reverse_lazy('book')
+class CreateComment(DataMixin, CreateView):
+    model = Comments
+    form_class = CommentForm
+    success_url = reverse_lazy('index')
 
-    # raise_exception = True
+    def form_valid(self, form):
+        # form.instance.book_id = self.kwargs.get('slug')
+        self.object = form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return self.object.book.get_absolute_url()
+
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         g_def = self.get_user_context(title="Регистрация")
         return dict(list(context.items()) + list(g_def.items()))
 
-    def form_valid(self, form):
 
-        comment = form.save()
-        login(self.request, comment)
-        return redirect('index')
+
+class UserProfile(DataMixin, DetailView):
+    model = CustomUser
+    template_name = "books/profile.html"
+    username_url_kwarg = 'user_username'
+    context_object_name = 'user'
+
+    def get_object(self, queryset=None):
+        return CustomUser.objects.get(username=self.kwargs['user_username'])
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+        context['user'] = user
+        g_def = self.get_user_context(title=context['user'])
+
+        return dict(list(context.items()) + list(g_def.items()))
+
+
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     g_def = self.get_user_context(title="Регистрация")
+    #     return dict(list(context.items()) + list(g_def.items()))
+
+
+
+class EditUserProfile(DataMixin, ListView):
+    model = CustomUser
+
+    template_name = "books/edit_profile.html"
+
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     user = self.get_object()
+    #     context['user'] = user
+    #     g_def = self.get_user_context(title=context['user'])
+    #
+    #     return dict(list(context.items()) + list(g_def.items()))
 
 
 def logout_user(request):
     logout(request)
     return redirect('login')
+
+
+
+
+
+
+
+
+# РАБОТА С API
+
+# class BookViewSet(mixins.CreateModelMixin,
+#                   mixins.RetrieveModelMixin,
+#                   mixins.UpdateModelMixin,
+#                   mixins.ListModelMixin,
+#                   GenericViewSet):
+#     # queryset = Books.objects.all()
+#     serializer_class = BooksSerializer
+#
+#
+#     def get_queryset(self):
+#         pk = self.kwargs.get("pk")
+#
+#         if not pk:
+#             return Books.objects.all()[:3]
+#
+#         return Books.objects.filter(pk=pk)
+#
+#     @action(methods=['get'], detail=True)
+#     def genre(self, request, pk=None):
+#         genres = Genres.objects.get(pk=pk)
+#         return Response({'genres': genres.genre_name})
+
+class BookAPIList(generics.ListCreateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )
+
+
+class BookAPIUpdate(generics.RetrieveUpdateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksSerializer
+    permission_classes = (IsOwnerOrReadOnly, )
+
+
+class BookAPIDestroy(generics.RetrieveDestroyAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksSerializer
+    permission_classes = (IsAdminOrReadOnly, )
 
 
 
